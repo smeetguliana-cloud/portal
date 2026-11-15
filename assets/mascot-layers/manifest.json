@@ -1,0 +1,142 @@
+{
+  "tech": {
+    "base": "tech-base.webp",
+    "parts": [
+      "tech-head.webp",
+      "tech-torso.webp",
+      "tech-arm_left.webp",
+      "tech-arm_right.webp",
+      "tech-leg_left.webp",
+      "tech-leg_right.webp"
+    ],
+    "canvas": [
+      768,
+      1376
+    ],
+    "source_canvas": [
+      1536,
+      2752
+    ],
+    "segmentation": "approximate alpha-mask regions; overlap at joints; base reconstructed with inpainting"
+  },
+  "game": {
+    "base": "game-base.webp",
+    "parts": [
+      "game-head.webp",
+      "game-torso.webp",
+      "game-arm_left.webp",
+      "game-arm_right.webp",
+      "game-leg_left.webp",
+      "game-leg_right.webp"
+    ],
+    "canvas": [
+      768,
+      1376
+    ],
+    "source_canvas": [
+      1536,
+      2752
+    ],
+    "segmentation": "approximate alpha-mask regions; overlap at joints; base reconstructed with inpainting"
+  },
+  "vibe": {
+    "base": "vibe-base.webp",
+    "parts": [
+      "vibe-head.webp",
+      "vibe-torso.webp",
+      "vibe-arm_left.webp",
+      "vibe-arm_right.webp",
+      "vibe-leg_left.webp",
+      "vibe-leg_right.webp"
+    ],
+    "canvas": [
+      768,
+      1376
+    ],
+    "source_canvas": [
+      1536,
+      2752
+    ],
+    "segmentation": "approximate alpha-mask regions; overlap at joints; base reconstructed with inpainting"
+  },
+  "ai": {
+    "base": "ai-base.webp",
+    "parts": [
+      "ai-head.webp",
+      "ai-torso.webp",
+      "ai-arm_left.webp",
+      "ai-arm_right.webp",
+      "ai-leg_left.webp",
+      "ai-leg_right.webp"
+    ],
+    "canvas": [
+      768,
+      1376
+    ],
+    "source_canvas": [
+      1536,
+      2752
+    ],
+    "segmentation": "approximate alpha-mask regions; overlap at joints; base reconstructed with inpainting"
+  },
+  "cyber": {
+    "base": "cyber-base.webp",
+    "parts": [
+      "cyber-head.webp",
+      "cyber-torso.webp",
+      "cyber-arm_left.webp",
+      "cyber-arm_right.webp",
+      "cyber-leg_left.webp",
+      "cyber-leg_right.webp"
+    ],
+    "canvas": [
+      768,
+      1376
+    ],
+    "source_canvas": [
+      1536,
+      2752
+    ],
+    "segmentation": "approximate alpha-mask regions; overlap at joints; base reconstructed with inpainting"
+  },
+  "human": {
+    "base": "human-base.webp",
+    "parts": [
+      "human-head.webp",
+      "human-torso.webp",
+      "human-arm_left.webp",
+      "human-arm_right.webp",
+      "human-leg_left.webp",
+      "human-leg_right.webp"
+    ],
+    "canvas": [
+      768,
+      1376
+    ],
+    "source_canvas": [
+      1536,
+      2752
+    ],
+    "segmentation": "approximate alpha-mask regions; overlap at joints; base reconstructed with inpainting"
+  },
+  "future": {
+    "base": "future-base.webp",
+    "parts": [
+      "future-head.webp",
+      "future-torso.webp",
+      "future-arm_left.webp",
+      "future-arm_right.webp",
+      "future-leg_left.webp",
+      "future-leg_right.webp"
+    ],
+    "canvas": [
+      768,
+      1376
+    ],
+    "source_canvas": [
+      1536,
+      2752
+    ],
+    "segmentation": "approximate alpha-mask regions; overlap at joints; base reconstructed with inpainting"
+  }
+}

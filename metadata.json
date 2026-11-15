@@ -1,0 +1,6 @@
+{
+  "name": "MULTIVERSE 404 — REALITY NOT FOUND",
+  "description": "Explore seven universes in a panoramic 3D environment with interactive scene-integrated mascot animations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

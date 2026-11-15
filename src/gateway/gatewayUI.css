@@ -1,0 +1,180 @@
+/* Visionexa '26 — The Infinite Cosmic Tree Environment Prototype UI */
+
+body.gateway-active > header,
+body.gateway-active > #hud,
+body.gateway-active > .view-controls,
+body.gateway-active > .bottom,
+body.gateway-active > #mobile-dock-wrapper,
+body.gateway-active > #world {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+#multiverse-gateway {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #010308;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+#multiverse-gateway:active {
+  cursor: grabbing;
+}
+
+#multiverse-gateway .gateway-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Subtle atmospheric edge framing that leaves the Infinite Cosmic Tree unobstructed */
+.gateway-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 21;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(2, 5, 13, 0.44) 86%, rgba(1, 3, 8, 0.86) 100%),
+    linear-gradient(180deg, rgba(1, 3, 9, 0.65) 0%, transparent 14%, transparent 85%, rgba(1, 3, 9, 0.72) 100%);
+}
+
+/* Minimal Top Branding */
+.gateway-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 25;
+  padding: clamp(18px, 2.5vw, 30px) 24px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.gateway-brand-title {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: clamp(18px, 2vw, 25px);
+  letter-spacing: 0.28em;
+  line-height: 1.1;
+  color: rgba(244, 248, 255, 0.92);
+  margin: 0;
+  text-shadow:
+    0 2px 20px rgba(0, 0, 0, 0.92),
+    0 0 28px rgba(251, 191, 36, 0.22);
+}
+
+.gateway-brand-title span {
+  color: #fcd34d;
+}
+
+.gateway-subtitle-prompt {
+  margin-top: 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 500;
+  font-size: clamp(10.5px, 0.95vw, 12.5px);
+  letter-spacing: 0.32em;
+  color: rgba(196, 218, 240, 0.64);
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+}
+
+/* Unobtrusive Bottom Camera Look Controls for exploring Canopy, Roots & Horizon */
+.gateway-look-hud {
+  position: fixed;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.gateway-look-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+  padding: 4px 6px;
+  background: rgba(3, 8, 18, 0.48);
+  border: 1px solid rgba(251, 191, 36, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.gateway-look-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(226, 238, 252, 0.78);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.gateway-look-btn:hover,
+.gateway-look-btn:focus-visible {
+  outline: none;
+  color: #fef3c7;
+  border-color: rgba(251, 191, 36, 0.38);
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.gateway-look-hint {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(176, 200, 226, 0.52);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
+}
+
+@media (max-width: 767px) {
+  .gateway-header {
+    padding: max(12px, env(safe-area-inset-top)) 16px 8px;
+  }
+  .gateway-brand-title {
+    font-size: clamp(15px, 4.2vw, 19px);
+    letter-spacing: 0.22em;
+  }
+  .gateway-subtitle-prompt {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    margin-top: 4px;
+  }
+  .gateway-look-controls {
+    gap: 3px;
+    padding: 3px 4px;
+  }
+  .gateway-look-btn {
+    font-size: 8.5px;
+    letter-spacing: 0.12em;
+    padding: 5px 7px;
+  }
+  .gateway-look-hint {
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+  }
+}
