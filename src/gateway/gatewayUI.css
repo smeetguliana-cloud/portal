@@ -5,7 +5,12 @@ body.gateway-active > #hud,
 body.gateway-active > .view-controls,
 body.gateway-active > .bottom,
 body.gateway-active > #mobile-dock-wrapper,
-body.gateway-active > #world {
+body.gateway-active > #world,
+body.gateway-active > .ambient,
+body.gateway-active > .grain,
+body.gateway-active > #transition,
+body.gateway-active > #mascot-effect {
+  display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;

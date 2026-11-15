@@ -97,6 +97,7 @@ export class MultiverseGateway {
     this.loadFoundationArtwork();
 
     this.bindEvents();
+    this.update();
     this.startLoop();
   }
 
@@ -106,6 +107,10 @@ export class MultiverseGateway {
     loader.load(
       COSMIC_TREE_FOUNDATION_ASSET,
       (tex) => {
+        if (this.disposed) {
+          tex.dispose();
+          return;
+        }
         if (THREE.sRGBEncoding) tex.encoding = THREE.sRGBEncoding;
         tex.minFilter = THREE.LinearMipmapLinearFilter;
         tex.magFilter = THREE.LinearFilter;
@@ -119,12 +124,26 @@ export class MultiverseGateway {
           mat.uniforms.uMap.value = tex;
           mat.uniforms.uHasMap.value = 1.0;
         });
+        this.renderer.render(this.scene, this.camera);
       },
       undefined,
       (err) => {
         console.error('Failed to load cosmic tree foundation texture:', err);
       }
     );
+  }
+
+  enterUniverse(universeId = 'techverse') {
+    this.dispose();
+    if (this.container && this.container.parentNode) {
+      this.container.parentNode.removeChild(this.container);
+    }
+    if (
+      window.VisionexaUniverse &&
+      typeof window.VisionexaUniverse.enter === 'function'
+    ) {
+      window.VisionexaUniverse.enter(universeId);
+    }
   }
 
   buildInfiniteVoidDome() {
