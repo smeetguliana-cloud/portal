@@ -42,6 +42,19 @@
  */
 
 import './gatewayUI.css';
+// Atlas assets are Vite imports: production builds include them automatically.
+import approvedTreeUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/tree_reference.png?url';
+import emissionUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/tree_emissive.png?url';
+import cyanUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/tree_emissive_cyan.png?url';
+import violetUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/tree_emissive_violet.png?url';
+import flowUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/tree_flow_rg.png?url';
+import maskTechUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_techverse.png?url';
+import maskGameUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_gameverse.png?url';
+import maskVibeUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_aiverse.png?url';
+import maskFutureUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_humanverse.png?url';
+import maskAIUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_vibeverse.png?url';
+import maskCyberUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_cyberverse.png?url';
+import maskHumanUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_futureverse.png?url';
 
 /* -------------------------------------------------------------------------- */
 /* 1. LIGHTWEIGHT GSAP-COMPATIBLE TIMELINE & TWEEN ENGINE                     */
@@ -443,6 +456,20 @@ const UNIVERSE_PORTALS = [
 ];
 
 /* -------------------------------------------------------------------------- */
+
+const APPROVED_PORTAL_LAYOUT = {
+  techverse:   {branchName:'UPPER-LEFT BOUGH',portalUv:[.28,.78],rootUv:[.495,.341],midUv:[.326,.649],branchMask:maskTechUrl,portalArt:'/assets/cosmic-tree/portals/01_techverse_reality_tear.png'},
+  gameverse:   {branchName:'MIDDLE-LEFT BOUGH',portalUv:[.20,.60],rootUv:[.495,.341],midUv:[.277,.552],branchMask:maskGameUrl,portalArt:'/assets/cosmic-tree/portals/02_gameverse_reality_tear.png'},
+  vibeverse:   {branchName:'LOWER-LEFT BOUGH',portalUv:[.27,.41],rootUv:[.495,.341],midUv:[.274,.389],branchMask:maskVibeUrl,portalArt:'/assets/cosmic-tree/portals/03_vibeverse_reality_tear.png'},
+  futureverse: {branchName:'CENTRAL CROWN',portalUv:[.50,.84],rootUv:[.495,.341],midUv:[.505,.703],branchMask:maskFutureUrl,portalArt:'/assets/cosmic-tree/portals/07_futureverse_reality_tear.png'},
+  aiverse:     {branchName:'UPPER-RIGHT BOUGH',portalUv:[.72,.78],rootUv:[.495,.341],midUv:[.677,.689],branchMask:maskAIUrl,portalArt:'/assets/cosmic-tree/portals/04_aiverse_reality_tear.png'},
+  cyberverse:  {branchName:'MIDDLE-RIGHT BOUGH',portalUv:[.80,.60],rootUv:[.495,.341],midUv:[.722,.513],branchMask:maskCyberUrl,portalArt:'/assets/cosmic-tree/portals/05_cyberverse_reality_tear.png'},
+  humanverse:  {branchName:'LOWER-RIGHT BOUGH',portalUv:[.73,.41],rootUv:[.495,.341],midUv:[.714,.398],branchMask:maskHumanUrl,portalArt:'/assets/cosmic-tree/portals/06_humanverse_reality_tear.png'}
+};
+// The energy atlas filenames refer to a previous assignment; these masks
+// are remapped by physical branch, preserving the requested visual layout.
+UNIVERSE_PORTALS.forEach(p=>Object.assign(p,APPROVED_PORTAL_LAYOUT[p.id]));
+
 /* 4. CUSTOM GLSL SHADERS FOR PARALLAX LAYERS & SCREEN-TEAR POST-PROCESSING   */
 /* -------------------------------------------------------------------------- */
 
@@ -513,6 +540,12 @@ const WORLD_TREE_SHADER = {
   fragmentShader: `
     uniform sampler2D uBaseTexture;
     uniform sampler2D uEmissiveMask;
+    uniform sampler2D uCyanMask;
+    uniform sampler2D uVioletMask;
+    uniform sampler2D uFlowMap;
+    uniform sampler2D uSelectedBranchMask;
+    uniform float uHasEnergyAtlas;
+    uniform float uHasSelectedBranchMask;
     uniform float uHasBase;
     uniform float uHasMask;
     uniform float uTime;
@@ -590,11 +623,18 @@ const WORLD_TREE_SHADER = {
 
       // Sample pixel-aligned layer4_emissive.png early so fine luminous outer branch twigs
       // that extend toward the 7 portals are preserved rather than clipped by baseTex.a
-      float maskVal = (uHasMask > 0.5) ? (texture2D(uEmissiveMask, vUv).r * wmCut) : 0.0;
+      float maskVal = (uHasMask > 0.5) ? (texture2D(uEmissiveMask,vUv).r * wmCut) : 0.0;
+      float cyanAmount = 0.0;
+      float violetAmount = 0.0;
+      if (uHasEnergyAtlas > 0.5) {
+        cyanAmount = texture2D(uCyanMask,vUv).r;
+        violetAmount = texture2D(uVioletMask,vUv).r;
+        maskVal = min(maskVal,max(cyanAmount,violetAmount));
+      }
 
       // Organic terminal branch tendrils bridging the 7 major boughs directly into their portals
       float tendrilMask = 0.0;
-      if (vUv.y > 0.36 && vUv.y < 0.76) {
+      if (uHasEnergyAtlas < 0.5 && vUv.y > 0.36 && vUv.y < 0.76) {
         tendrilMask = max(tendrilMask, branchTerminalTendril(vUv, vec2(0.382, 0.628), vec2(0.315, 0.648), 1.17));
         tendrilMask = max(tendrilMask, branchTerminalTendril(vUv, vec2(0.340, 0.542), vec2(0.248, 0.521), 2.43));
         tendrilMask = max(tendrilMask, branchTerminalTendril(vUv, vec2(0.402, 0.455), vec2(0.359, 0.436), 3.71));
@@ -636,9 +676,14 @@ const WORLD_TREE_SHADER = {
           float corridorWidth = mix(0.070, 0.046, activeBranchProgress);
           activeBranchMask = smoothstep(corridorWidth, corridorWidth * 0.16, bDist) *
                              smoothstep(-0.02, 0.10, activeBranchProgress);
-          float filWave = sin(activeBranchProgress * 22.0 - uTime * 3.4) * 0.0032;
-          activeBranchFilament = smoothstep(0.010, 0.0, abs(bDist + filWave)) *
-                                 smoothstep(0.15, 0.65, activeBranchProgress);
+          if (uHasSelectedBranchMask > 0.5) {
+              activeBranchMask = texture2D(uSelectedBranchMask,vUv).r *
+                smoothstep(0.008,0.25,maskVal);
+           }
+           float filWave = sin(activeBranchProgress * 22.0 - uTime * 3.4) * 0.0032;
+          activeBranchFilament = uHasSelectedBranchMask > 0.5 ? 0.0 :
+               smoothstep(0.010,0.0,abs(bDist+filWave)) *
+               smoothstep(0.15,0.65,activeBranchProgress);
         }
 
         if (effectiveMask > 0.004 || haloMask > 0.004 || (activeBranchMask * uActiveBranchHover) > 0.01) {
@@ -649,7 +694,13 @@ const WORLD_TREE_SHADER = {
           vec2 branchDelta = vUv - vec2(0.50, 0.44);
           float branchRadial = 0.34 + length(branchDelta * vec2(1.16, 1.05));
           float upperBlend = smoothstep(0.30, 0.54, vUv.y);
-          float flowCoord = mix(rootConverge, branchRadial, upperBlend);
+          float flowCoord = mix(rootConverge,branchRadial,upperBlend);
+           if(uHasEnergyAtlas > 0.5){
+             // RG stores signed tangent, not a flow-distance texture.
+             vec2 dir=texture2D(uFlowMap,vUv).rg*2.0-1.0;
+             flowCoord+=dot(normalize(dir+vec2(.0001)),vUv-vec2(.5,.34)) *
+                        .10 * smoothstep(.08,.4,length(dir));
+           }
 
           // Azimuthal branch offset (zero inside central trunk, staggered across boughs)
           float branchAngle = atan(branchDelta.x, branchDelta.y + 0.0001);
@@ -718,7 +769,11 @@ const WORLD_TREE_SHADER = {
             0.0,
             1.0
           );
-          vec3 baseVeinCol = mix(cyanAccent, warmGold, goldBias);
+          vec3 baseVeinCol = mix(cyanAccent,warmGold,goldBias);
+           if(uHasEnergyAtlas > .5){
+             float w=violetAmount/max(.001,cyanAmount+violetAmount);
+             baseVeinCol=mix(cyanAccent,vec3(.58,.32,.98),w);
+           }
           vec3 coreCol = mix(baseVeinCol, ivoryCore, smoothstep(0.75, 1.45, veinEnergy) * 0.72);
 
           // Phase 4 Part B: Localized hovered-branch vein intensification & outward traveling pulse
@@ -1871,6 +1926,9 @@ export class MultiverseGateway {
     this.treeUniforms = {
       uBaseTexture: { value: null },
       uEmissiveMask: { value: null },
+      uCyanMask: { value: null },uVioletMask: { value: null },
+      uFlowMap: { value: null },uSelectedBranchMask: { value: null },
+      uHasEnergyAtlas: { value: 0.0 },uHasSelectedBranchMask: { value: 0.0 },
       uHasBase: { value: 0.0 },
       uHasMask: { value: 0.0 },
       uTime: { value: 0.0 },
@@ -1902,22 +1960,44 @@ export class MultiverseGateway {
     this.scene.add(this.layer2Mesh);
 
     this.loadTextureWithFallback(
-      [
-        '/assets/cosmic-tree/tree/cosmic_tree_main_layer_clean.png',
-        '/assets/layer2_tree.png',
-      ],
+      [approvedTreeUrl],
       (tex) => {
         this.treeUniforms.uBaseTexture.value = tex;
         this.treeUniforms.uHasBase.value = 1.0;
       }
     );
 
-    this.loadTextureWithFallback(['/assets/layer4_emissive.png'], (maskTex) => {
+    this.loadTextureWithFallback([emissionUrl], (maskTex) => {
       if (THREE.LinearEncoding) {
         maskTex.encoding = THREE.LinearEncoding;
       }
       this.treeUniforms.uEmissiveMask.value = maskTex;
       this.treeUniforms.uHasMask.value = 1.0;
+    });
+    this.energyTextures={};
+    this.selectedBranchTextures={};
+    const channels={cyan:cyanUrl,violet:violetUrl,flow:flowUrl};
+    Object.entries(channels).forEach(([key,url])=>{
+      this.loadTextureWithFallback([url],tex=>{
+        if(THREE.LinearEncoding)tex.encoding=THREE.LinearEncoding;
+        this.energyTextures[key]=tex;
+        if(Object.keys(this.energyTextures).length===3){
+          this.treeUniforms.uCyanMask.value=this.energyTextures.cyan;
+          this.treeUniforms.uVioletMask.value=this.energyTextures.violet;
+          this.treeUniforms.uFlowMap.value=this.energyTextures.flow;
+          this.treeUniforms.uHasEnergyAtlas.value=1;
+        }
+      });
+    });
+    UNIVERSE_PORTALS.forEach(p=>{
+      this.loadTextureWithFallback([p.branchMask],tex=>{
+        if(THREE.LinearEncoding)tex.encoding=THREE.LinearEncoding;
+        this.selectedBranchTextures[p.id]=tex;
+        if(this.activeBranchNode?.cfg.id===p.id){
+          this.treeUniforms.uSelectedBranchMask.value=tex;
+          this.treeUniforms.uHasSelectedBranchMask.value=1;
+        }
+      });
     });
 
     // --- LAYER 2C: Lower Roots & Ground Extension at z = -24.5 ---
@@ -2135,7 +2215,7 @@ export class MultiverseGateway {
       this.distantCloudsMesh.scale.set(dc.width, dc.height, 1);
     }
 
-    const d2 = this.getDimensionsAtZ(-30, 1.16);
+    const d2 = this.getDimensionsAtZ(-30, 1.16, 1536 / 1024);
     this.layer2Mesh.scale.set(d2.width, d2.height, 1);
     this.treeDimensions = d2;
 
@@ -2344,14 +2424,13 @@ export class MultiverseGateway {
     }
 
     const { width, height, frustumWidth, frustumHeight } = this.treeDimensions;
-    const spanX = Math.min(width * 0.88, frustumWidth * 0.86);
-    const spanY = Math.min(height * 0.88, frustumHeight * 0.82);
-    const baseSize = Math.max(4.6, Math.min(6.8, frustumWidth * 0.135));
+    // ~22% smaller; position is defined on the SAME source image UV plane.
+    const baseSize=Math.max(3.2,Math.min(5.0,frustumWidth*0.103));
 
     this.portalNodes.forEach((node) => {
       node.baseScale = baseSize;
-      const wx = node.cfg.nx * spanX;
-      const wy = node.cfg.ny * spanY;
+      const wx=(node.cfg.portalUv[0]-.5)*width;
+      const wy=(node.cfg.portalUv[1]-.5)*height;
       node.mesh.position.set(wx, wy, -29.88);
       node.mesh.rotation.z = node.cfg.tilt || 0;
 
@@ -2503,7 +2582,11 @@ export class MultiverseGateway {
     }
 
     this.hoveredPortal = targetNode;
-
+    if(this.treeUniforms){
+      const tex=targetNode && this.selectedBranchTextures?.[targetNode.cfg.id];
+      this.treeUniforms.uSelectedBranchMask.value=tex||null;
+      this.treeUniforms.uHasSelectedBranchMask.value=tex?1:0;
+    }
     if (targetNode) {
       this.activeBranchNode = targetNode;
       this.branchHoverState.target = 1.0;
