@@ -61,6 +61,7 @@ try {
   await desktop.waitForFunction(() =>
     !document.body.classList.contains('gateway-active') &&
     window.VisionexaUniverse?.isMounted(), null, { timeout: 20000 });
+  await desktop.waitForFunction(() => !window.VisionexaGateway.isTransitioning, null, { timeout: 10000 });
   await desktop.locator('#return-to-nexus').click({ timeout: 10000 });
   await desktop.waitForFunction(() => document.body.classList.contains('gateway-active'), null, { timeout: 10000 });
   await desktop.close();
