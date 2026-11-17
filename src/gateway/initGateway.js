@@ -324,7 +324,7 @@ const UNIVERSE_PORTALS = [
     branchName: 'MIDDLE LEFT', label: 'SECTOR 02 · GAMEVERSE',
     color: '#c084fc', secondaryColor: '#edc9ff',
     interiorBg: '/assets/gameverse-bg.webp', artwork: GATEWAY_ART.portals.gameverse,
-    branchMask: GATEWAY_ART.masks.gameverse, artworkTint: 0.74,
+    branchMask: GATEWAY_ART.masks.gameverse, artworkTint: 0.52,
     rootUv: [0.495, 0.34], midUv: [0.33, 0.54],
     portalUv: [0.18, 0.6],
     aspect: [1.0, 1.0], tilt: 0.0, branchDir: [-0.98, 0.12],
@@ -348,7 +348,7 @@ const UNIVERSE_PORTALS = [
     interiorBg: '/assets/futureverse-bg.webp', artwork: GATEWAY_ART.portals.futureverse,
     branchMask: GATEWAY_ART.masks.futureverse, artworkTint: 0.32,
     rootUv: [0.495, 0.34], midUv: [0.51, 0.67],
-    portalUv: [0.5, 0.88],
+    portalUv: [0.5, 0.77],
     aspect: [1.0, 1.0], tilt: 0.0, branchDir: [0, 1],
     seed: 4.68,
   },
@@ -368,7 +368,7 @@ const UNIVERSE_PORTALS = [
     branchName: 'MIDDLE RIGHT', label: 'SECTOR 05 · CYBERVERSE',
     color: '#fb923c', secondaryColor: '#ffe2b0',
     interiorBg: '/assets/cyberverse-bg.webp', artwork: GATEWAY_ART.portals.cyberverse,
-    branchMask: GATEWAY_ART.masks.cyberverse, artworkTint: 0.56,
+    branchMask: GATEWAY_ART.masks.cyberverse, artworkTint: 0.42,
     rootUv: [0.495, 0.34], midUv: [0.68, 0.54],
     portalUv: [0.82, 0.6],
     aspect: [1.0, 1.0], tilt: 0.0, branchDir: [0.98, 0.12],
@@ -379,7 +379,7 @@ const UNIVERSE_PORTALS = [
     branchName: 'LOWER RIGHT', label: 'SECTOR 06 · HUMANVERSE',
     color: '#7dd3c7', secondaryColor: '#f4d4a1',
     interiorBg: '/assets/humanverse-bg.webp', artwork: GATEWAY_ART.portals.humanverse,
-    branchMask: GATEWAY_ART.masks.humanverse, artworkTint: 0.48,
+    branchMask: GATEWAY_ART.masks.humanverse, artworkTint: 0.32,
     rootUv: [0.495, 0.34], midUv: [0.67, 0.43],
     portalUv: [0.76, 0.4],
     aspect: [1.0, 1.0], tilt: 0.0, branchDir: [0.93, -0.35],
@@ -1446,7 +1446,8 @@ const DIMENSIONAL_PORTAL_SHADER = {
         float artLuma = dot(artwork.rgb, vec3(0.2126, 0.7152, 0.0722));
         vec3 tintedArt = mix(artwork.rgb,
           uPrimaryColor * (0.20 + artLuma * 1.26), uArtworkTint);
-        tintedArt *= 0.68 + 0.18 * uHover + 0.09 * uDiveBoost;
+        tintedArt = pow(max(tintedArt, vec3(0.0)), vec3(0.86));
+        tintedArt *= 0.92 + 0.17 * uHover + 0.08 * uDiveBoost;
         col = mix(col * 0.36, tintedArt, artAlpha * 0.93);
         alpha = max(alpha * 0.56, artAlpha * (0.80 + 0.17 * uHover));
       }
@@ -1616,6 +1617,7 @@ export class MultiverseGateway {
     this.buildParallaxLayers();
     this.buildCosmicParticles();
     this.buildUniversePortals();
+    this.buildPortalMarkers();
     this.initPostProcessing();
     this.setupReturnToNexusHook();
     this.bindEvents();
@@ -2309,6 +2311,45 @@ export class MultiverseGateway {
     );
 
     this.updatePortalPositions();
+  }
+
+  /**
+   * Quiet, always-readable universe names that follow the real 3D portal
+   * projections (rather than floating at guessed viewport coordinates).
+   * The mobile layout uses its accessible illustrated dock instead.
+   */
+  buildPortalMarkers() {
+    const THREE = window.THREE;
+    this._markerProjVec = new THREE.Vector3();
+    const group = document.createElement('div');
+    group.className = 'gateway-portal-markers';
+    group.setAttribute('aria-hidden', 'true');
+    this.portalMarkers = this.portalNodes.map((node) => {
+      const el = document.createElement('span');
+      el.className = 'gateway-portal-marker';
+      el.textContent = node.cfg.title;
+      el.style.setProperty('--portal-color', node.cfg.color);
+      group.appendChild(el);
+      return { node, el };
+    });
+    this.container.appendChild(group);
+    this.updatePortalMarkers();
+  }
+
+  updatePortalMarkers() {
+    if (!this.portalMarkers || window.innerWidth < 768) return;
+    const width = window.innerWidth, height = window.innerHeight;
+    for (const marker of this.portalMarkers) {
+      this._markerProjVec.copy(marker.node.mesh.position).project(this.camera);
+      const ndc = this._markerProjVec;
+      const visible = ndc.z < 1 && ndc.z > -1 && ndc.x > -1.02 &&
+        ndc.x < 1.02 && ndc.y > -0.98 && ndc.y < 0.98;
+      marker.el.style.display = visible ? 'block' : 'none';
+      if (!visible) continue;
+      marker.el.style.left = Math.max(56, Math.min(width - 56, (ndc.x * 0.5 + 0.5) * width)) + 'px';
+      marker.el.style.top = Math.max(94, Math.min(height - 48, (1 - (ndc.y * 0.5 + 0.5)) * height + 54)) + 'px';
+      marker.el.style.opacity = this.hoveredPortal === marker.node ? '0.12' : '0.86';
+    }
   }
 
   /**
@@ -3262,6 +3303,7 @@ export class MultiverseGateway {
       if (this.hoveredPortal && !this.isTransitioning) {
         this.updateHoveredLabelPosition();
       }
+      this.updatePortalMarkers();
 
       // 5. Render directly during idle exploration for mobile performance;
       //    route through EffectComposer only during active screen-tear transitions
@@ -3431,6 +3473,12 @@ function initMultiverseGateway() {
     button.textContent = destination.title;
     button.setAttribute('aria-label', 'Enter ' + destination.title);
     button.style.setProperty('--portal-color', destination.color);
+    const icon = document.createElement('img');
+    icon.className = 'gateway-mobile-portal-art';
+    icon.src = destination.artwork;
+    icon.alt = '';
+    icon.decoding = 'async';
+    button.prepend(icon);
     button.addEventListener('click', (event) => {
       event.stopPropagation();
       if (!gatewayInstance || !gatewayInstance.isActive) return;
