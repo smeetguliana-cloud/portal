@@ -345,3 +345,54 @@ body.gateway-active > #mascot-effect {
     letter-spacing: 0.14em;
   }
 }
+
+/* Seven direct touch destinations use the original universe IDs. They are a
+   navigation fallback, not a second set of floating tree portal objects. */
+.gateway-mobile-destinations { display: none; }
+@media (max-width: 767px), (pointer: coarse) {
+  .gateway-mobile-destinations {
+    position: fixed;
+    z-index: 28;
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    pointer-events: auto;
+  }
+  .gateway-mobile-destinations button {
+    appearance: none;
+    display: grid;
+    place-items: center;
+    min-height: 44px;
+    min-width: 0;
+    padding: 7px 3px;
+    border: 1px solid color-mix(in srgb, var(--portal-color) 48%, transparent);
+    border-radius: 9px;
+    background: rgba(4, 11, 24, .87);
+    color: #f1f7fc;
+    font: 700 clamp(8px, 2.35vw, 11px)/1.2 'Rajdhani',sans-serif;
+    letter-spacing: .025em;
+    text-align: center;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--portal-color) 12%, transparent);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .gateway-mobile-destinations button:focus-visible {
+    outline: 2px solid var(--portal-color);
+    outline-offset: 2px;
+  }
+  .gateway-look-hud {
+    bottom: calc(112px + env(safe-area-inset-bottom));
+  }
+  .gateway-look-hint {
+    font-size: 8px;
+    letter-spacing: .07em;
+  }
+  .gateway-portal-label {
+    max-width: calc(100vw - 20px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gateway-mobile-destinations button { transition: none; }
+}

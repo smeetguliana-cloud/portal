@@ -42,6 +42,19 @@
  */
 
 import './gatewayUI.css';
+// Atlas assets are Vite imports: production builds include them automatically.
+import approvedTreeUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/tree_reference.png?url';
+import emissionUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/tree_emissive.png?url';
+import cyanUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/tree_emissive_cyan.png?url';
+import violetUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/tree_emissive_violet.png?url';
+import flowUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/tree_flow_rg.png?url';
+import maskTechUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_techverse.png?url';
+import maskGameUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_gameverse.png?url';
+import maskVibeUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_aiverse.png?url';
+import maskFutureUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_humanverse.png?url';
+import maskAIUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_vibeverse.png?url';
+import maskCyberUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_cyberverse.png?url';
+import maskHumanUrl from '../../multiverse404_pixel_aligned_energy_map/multiverse404_energy_maps/branch_futureverse.png?url';
 
 /* -------------------------------------------------------------------------- */
 /* 1. LIGHTWEIGHT GSAP-COMPATIBLE TIMELINE & TWEEN ENGINE                     */
@@ -443,6 +456,20 @@ const UNIVERSE_PORTALS = [
 ];
 
 /* -------------------------------------------------------------------------- */
+
+const APPROVED_PORTAL_LAYOUT = {
+  techverse:   {branchName:'UPPER-LEFT BOUGH',portalUv:[.28,.78],rootUv:[.495,.341],midUv:[.326,.649],branchMask:maskTechUrl,portalArt:'/assets/cosmic-tree/portals/01_techverse_reality_tear.png'},
+  gameverse:   {branchName:'MIDDLE-LEFT BOUGH',portalUv:[.20,.60],rootUv:[.495,.341],midUv:[.277,.552],branchMask:maskGameUrl,portalArt:'/assets/cosmic-tree/portals/02_gameverse_reality_tear.png'},
+  vibeverse:   {branchName:'LOWER-LEFT BOUGH',portalUv:[.27,.41],rootUv:[.495,.341],midUv:[.274,.389],branchMask:maskVibeUrl,portalArt:'/assets/cosmic-tree/portals/03_vibeverse_reality_tear.png'},
+  futureverse: {branchName:'CENTRAL CROWN',portalUv:[.50,.84],rootUv:[.495,.341],midUv:[.505,.703],branchMask:maskFutureUrl,portalArt:'/assets/cosmic-tree/portals/07_futureverse_reality_tear.png'},
+  aiverse:     {branchName:'UPPER-RIGHT BOUGH',portalUv:[.72,.78],rootUv:[.495,.341],midUv:[.677,.689],branchMask:maskAIUrl,portalArt:'/assets/cosmic-tree/portals/04_aiverse_reality_tear.png'},
+  cyberverse:  {branchName:'MIDDLE-RIGHT BOUGH',portalUv:[.80,.60],rootUv:[.495,.341],midUv:[.722,.513],branchMask:maskCyberUrl,portalArt:'/assets/cosmic-tree/portals/05_cyberverse_reality_tear.png'},
+  humanverse:  {branchName:'LOWER-RIGHT BOUGH',portalUv:[.73,.41],rootUv:[.495,.341],midUv:[.714,.398],branchMask:maskHumanUrl,portalArt:'/assets/cosmic-tree/portals/06_humanverse_reality_tear.png'}
+};
+// The energy atlas filenames refer to a previous assignment; these masks
+// are remapped by physical branch, preserving the requested visual layout.
+UNIVERSE_PORTALS.forEach(p=>Object.assign(p,APPROVED_PORTAL_LAYOUT[p.id]));
+
 /* 4. CUSTOM GLSL SHADERS FOR PARALLAX LAYERS & SCREEN-TEAR POST-PROCESSING   */
 /* -------------------------------------------------------------------------- */
 
@@ -513,6 +540,12 @@ const WORLD_TREE_SHADER = {
   fragmentShader: `
     uniform sampler2D uBaseTexture;
     uniform sampler2D uEmissiveMask;
+    uniform sampler2D uCyanMask;
+    uniform sampler2D uVioletMask;
+    uniform sampler2D uFlowMap;
+    uniform sampler2D uSelectedBranchMask;
+    uniform float uHasEnergyAtlas;
+    uniform float uHasSelectedBranchMask;
     uniform float uHasBase;
     uniform float uHasMask;
     uniform float uTime;
@@ -590,11 +623,18 @@ const WORLD_TREE_SHADER = {
 
       // Sample pixel-aligned layer4_emissive.png early so fine luminous outer branch twigs
       // that extend toward the 7 portals are preserved rather than clipped by baseTex.a
-      float maskVal = (uHasMask > 0.5) ? (texture2D(uEmissiveMask, vUv).r * wmCut) : 0.0;
+      float maskVal = (uHasMask > 0.5) ? (texture2D(uEmissiveMask,vUv).r * wmCut) : 0.0;
+      float cyanAmount = 0.0;
+      float violetAmount = 0.0;
+      if (uHasEnergyAtlas > 0.5) {
+        cyanAmount = texture2D(uCyanMask,vUv).r;
+        violetAmount = texture2D(uVioletMask,vUv).r;
+        maskVal = min(maskVal,max(cyanAmount,violetAmount));
+      }
 
       // Organic terminal branch tendrils bridging the 7 major boughs directly into their portals
       float tendrilMask = 0.0;
-      if (vUv.y > 0.36 && vUv.y < 0.76) {
+      if (uHasEnergyAtlas < 0.5 && vUv.y > 0.36 && vUv.y < 0.76) {
         tendrilMask = max(tendrilMask, branchTerminalTendril(vUv, vec2(0.382, 0.628), vec2(0.315, 0.648), 1.17));
         tendrilMask = max(tendrilMask, branchTerminalTendril(vUv, vec2(0.340, 0.542), vec2(0.248, 0.521), 2.43));
         tendrilMask = max(tendrilMask, branchTerminalTendril(vUv, vec2(0.402, 0.455), vec2(0.359, 0.436), 3.71));
@@ -636,9 +676,14 @@ const WORLD_TREE_SHADER = {
           float corridorWidth = mix(0.070, 0.046, activeBranchProgress);
           activeBranchMask = smoothstep(corridorWidth, corridorWidth * 0.16, bDist) *
                              smoothstep(-0.02, 0.10, activeBranchProgress);
-          float filWave = sin(activeBranchProgress * 22.0 - uTime * 3.4) * 0.0032;
-          activeBranchFilament = smoothstep(0.010, 0.0, abs(bDist + filWave)) *
-                                 smoothstep(0.15, 0.65, activeBranchProgress);
+          if (uHasSelectedBranchMask > 0.5) {
+              activeBranchMask = texture2D(uSelectedBranchMask,vUv).r *
+                smoothstep(0.008,0.25,maskVal);
+           }
+           float filWave = sin(activeBranchProgress * 22.0 - uTime * 3.4) * 0.0032;
+          activeBranchFilament = uHasSelectedBranchMask > 0.5 ? 0.0 :
+               smoothstep(0.010,0.0,abs(bDist+filWave)) *
+               smoothstep(0.15,0.65,activeBranchProgress);
         }
 
         if (effectiveMask > 0.004 || haloMask > 0.004 || (activeBranchMask * uActiveBranchHover) > 0.01) {
@@ -649,7 +694,13 @@ const WORLD_TREE_SHADER = {
           vec2 branchDelta = vUv - vec2(0.50, 0.44);
           float branchRadial = 0.34 + length(branchDelta * vec2(1.16, 1.05));
           float upperBlend = smoothstep(0.30, 0.54, vUv.y);
-          float flowCoord = mix(rootConverge, branchRadial, upperBlend);
+          float flowCoord = mix(rootConverge,branchRadial,upperBlend);
+           if(uHasEnergyAtlas > 0.5){
+             // RG stores signed tangent, not a flow-distance texture.
+             vec2 dir=texture2D(uFlowMap,vUv).rg*2.0-1.0;
+             flowCoord+=dot(normalize(dir+vec2(.0001)),vUv-vec2(.5,.34)) *
+                        .10 * smoothstep(.08,.4,length(dir));
+           }
 
           // Azimuthal branch offset (zero inside central trunk, staggered across boughs)
           float branchAngle = atan(branchDelta.x, branchDelta.y + 0.0001);
@@ -718,7 +769,11 @@ const WORLD_TREE_SHADER = {
             0.0,
             1.0
           );
-          vec3 baseVeinCol = mix(cyanAccent, warmGold, goldBias);
+          vec3 baseVeinCol = mix(cyanAccent,warmGold,goldBias);
+           if(uHasEnergyAtlas > .5){
+             float w=violetAmount/max(.001,cyanAmount+violetAmount);
+             baseVeinCol=mix(cyanAccent,vec3(.58,.32,.98),w);
+           }
           vec3 coreCol = mix(baseVeinCol, ivoryCore, smoothstep(0.75, 1.45, veinEnergy) * 0.72);
 
           // Phase 4 Part B: Localized hovered-branch vein intensification & outward traveling pulse
@@ -1294,6 +1349,8 @@ const DIMENSIONAL_PORTAL_SHADER = {
     uniform sampler2D uInteriorTex;
     uniform sampler2D uFilamentTex;
     uniform sampler2D uStreamTex;
+    uniform sampler2D uPortalArtTex;
+    uniform float uHasPortalArt;
     uniform float uHasInterior;
     uniform float uHasFilament;
     uniform float uHasStream;
@@ -1443,6 +1500,11 @@ const DIMENSIONAL_PORTAL_SHADER = {
           float innerDepth = smoothstep(0.50, 0.06, rEff);
           float innerRimGlow = smoothstep(0.16, 0.46, rEff);
           interiorCol = gradedWorld * (0.58 + 0.42 * innerDepth + 0.28 * uHover);
+           if (uHasPortalArt > 0.5) {
+             vec2 artUv = clamp(vec2(0.5 + q.x * 0.26, 0.50 + q.y * 0.28), 0.03, 0.97);
+             vec4 art = texture2D(uPortalArtTex, artUv);
+             interiorCol = mix(interiorCol, art.rgb * 0.80, art.a * (0.27 + 0.22 * uHover));
+           }
           interiorCol += mix(uPrimaryColor, uSecondaryColor, 0.45) * innerRimGlow * (0.22 + 0.24 * uHover);
         } else {
           interiorCol = mix(uPrimaryColor * 0.22, uSecondaryColor * 0.45, smoothstep(0.48, 0.0, rEff));
@@ -1871,6 +1933,9 @@ export class MultiverseGateway {
     this.treeUniforms = {
       uBaseTexture: { value: null },
       uEmissiveMask: { value: null },
+      uCyanMask: { value: null },uVioletMask: { value: null },
+      uFlowMap: { value: null },uSelectedBranchMask: { value: null },
+      uHasEnergyAtlas: { value: 0.0 },uHasSelectedBranchMask: { value: 0.0 },
       uHasBase: { value: 0.0 },
       uHasMask: { value: 0.0 },
       uTime: { value: 0.0 },
@@ -1902,22 +1967,44 @@ export class MultiverseGateway {
     this.scene.add(this.layer2Mesh);
 
     this.loadTextureWithFallback(
-      [
-        '/assets/cosmic-tree/tree/cosmic_tree_main_layer_clean.png',
-        '/assets/layer2_tree.png',
-      ],
+      [approvedTreeUrl],
       (tex) => {
         this.treeUniforms.uBaseTexture.value = tex;
         this.treeUniforms.uHasBase.value = 1.0;
       }
     );
 
-    this.loadTextureWithFallback(['/assets/layer4_emissive.png'], (maskTex) => {
+    this.loadTextureWithFallback([emissionUrl], (maskTex) => {
       if (THREE.LinearEncoding) {
         maskTex.encoding = THREE.LinearEncoding;
       }
       this.treeUniforms.uEmissiveMask.value = maskTex;
       this.treeUniforms.uHasMask.value = 1.0;
+    });
+    this.energyTextures={};
+    this.selectedBranchTextures={};
+    const channels={cyan:cyanUrl,violet:violetUrl,flow:flowUrl};
+    Object.entries(channels).forEach(([key,url])=>{
+      this.loadTextureWithFallback([url],tex=>{
+        if(THREE.LinearEncoding)tex.encoding=THREE.LinearEncoding;
+        this.energyTextures[key]=tex;
+        if(Object.keys(this.energyTextures).length===3){
+          this.treeUniforms.uCyanMask.value=this.energyTextures.cyan;
+          this.treeUniforms.uVioletMask.value=this.energyTextures.violet;
+          this.treeUniforms.uFlowMap.value=this.energyTextures.flow;
+          this.treeUniforms.uHasEnergyAtlas.value=1;
+        }
+      });
+    });
+    UNIVERSE_PORTALS.forEach(p=>{
+      this.loadTextureWithFallback([p.branchMask],tex=>{
+        if(THREE.LinearEncoding)tex.encoding=THREE.LinearEncoding;
+        this.selectedBranchTextures[p.id]=tex;
+        if(this.activeBranchNode?.cfg.id===p.id){
+          this.treeUniforms.uSelectedBranchMask.value=tex;
+          this.treeUniforms.uHasSelectedBranchMask.value=1;
+        }
+      });
     });
 
     // --- LAYER 2C: Lower Roots & Ground Extension at z = -24.5 ---
@@ -2135,7 +2222,7 @@ export class MultiverseGateway {
       this.distantCloudsMesh.scale.set(dc.width, dc.height, 1);
     }
 
-    const d2 = this.getDimensionsAtZ(-30, 1.16);
+    const d2 = this.getDimensionsAtZ(-30, 1.16, 1536 / 1024);
     this.layer2Mesh.scale.set(d2.width, d2.height, 1);
     this.treeDimensions = d2;
 
@@ -2234,6 +2321,8 @@ export class MultiverseGateway {
         uInteriorTex: { value: null },
         uFilamentTex: { value: null },
         uStreamTex: { value: null },
+        uPortalArtTex: { value: null },
+        uHasPortalArt: { value: 0.0 },
         uHasInterior: { value: 0.0 },
         uHasFilament: { value: 0.0 },
         uHasStream: { value: 0.0 },
@@ -2295,6 +2384,12 @@ export class MultiverseGateway {
       this.portalNodes.push(node);
 
       // Load each universe's authentic panoramic world artwork for the deep portal interior
+      if (cfg.portalArt) {
+        this.loadTextureWithFallback([cfg.portalArt], (portalTexture) => {
+          uniforms.uPortalArtTex.value = portalTexture;
+          uniforms.uHasPortalArt.value = 1.0;
+        });
+      }
       if (cfg.interiorBg) {
         this.loadTextureWithFallback([cfg.interiorBg], (worldTex) => {
           uniforms.uInteriorTex.value = worldTex;
@@ -2344,14 +2439,13 @@ export class MultiverseGateway {
     }
 
     const { width, height, frustumWidth, frustumHeight } = this.treeDimensions;
-    const spanX = Math.min(width * 0.88, frustumWidth * 0.86);
-    const spanY = Math.min(height * 0.88, frustumHeight * 0.82);
-    const baseSize = Math.max(4.6, Math.min(6.8, frustumWidth * 0.135));
+    // ~22% smaller; position is defined on the SAME source image UV plane.
+    const baseSize=Math.max(3.2,Math.min(5.0,frustumWidth*0.103));
 
     this.portalNodes.forEach((node) => {
       node.baseScale = baseSize;
-      const wx = node.cfg.nx * spanX;
-      const wy = node.cfg.ny * spanY;
+      const wx=(node.cfg.portalUv[0]-.5)*width;
+      const wy=(node.cfg.portalUv[1]-.5)*height;
       node.mesh.position.set(wx, wy, -29.88);
       node.mesh.rotation.z = node.cfg.tilt || 0;
 
@@ -2503,7 +2597,11 @@ export class MultiverseGateway {
     }
 
     this.hoveredPortal = targetNode;
-
+    if(this.treeUniforms){
+      const tex=targetNode && this.selectedBranchTextures?.[targetNode.cfg.id];
+      this.treeUniforms.uSelectedBranchMask.value=tex||null;
+      this.treeUniforms.uHasSelectedBranchMask.value=tex?1:0;
+    }
     if (targetNode) {
       this.activeBranchNode = targetNode;
       this.branchHoverState.target = 1.0;
@@ -2657,134 +2755,23 @@ export class MultiverseGateway {
    * 4. At peak distortion, hides the gateway canvas and calls `window.VisionexaUniverse.enter(id)`.
    */
   triggerDimensionalDive(portalNode) {
-    if (this.isTransitioning || !portalNode) return;
+    if (this.isTransitioning || !this.isActive || !portalNode) return;
+    if (typeof window.VisionexaUniverse?.enter !== 'function') {
+      console.error('Original universe navigation is unavailable.');
+      return;
+    }
     this.isTransitioning = true;
     this.lastEnteredPortal = portalNode.cfg;
-
-    const THREE = window.THREE;
-    const targetId = portalNode.cfg.id;
-    const portalPos = portalNode.mesh.position.clone();
-
-    // Project clicked portal to screen UV (0..1) for the radial screen-tear origin
-    const projected = portalPos.clone().project(this.camera);
-    this.tearPass.uniforms.uDiveCenter.value.set(
-      THREE.MathUtils.clamp(projected.x * 0.5 + 0.5, 0.1, 0.9),
-      THREE.MathUtils.clamp(projected.y * 0.5 + 0.5, 0.1, 0.9)
-    );
-    this.tearPass.uniforms.uDiveColor.value.set(portalNode.cfg.color);
-
-    // Hide the floating label and header UI during the warp dive
-    if (this.labelEl) this.labelEl.classList.remove('is-visible');
-    this.container.classList.add('gateway-diving');
-
-    // Expand and illuminate the clicked reality tear as the camera dives into it
-    gsap.to(portalNode.animState, {
-      scaleFactor: 2.45,
-      hoverLevel: 1.0,
-      diveBoost: 1.0,
-      duration: 1.05,
-      ease: 'expo.in',
-      overwrite: true,
-      onUpdate: () => {
-        const s = portalNode.baseScale * portalNode.animState.scaleFactor;
-        portalNode.mesh.scale.set(
-          s * portalNode.aspectX,
-          s * portalNode.aspectY,
-          1
-        );
-        portalNode.uniforms.uHover.value = portalNode.animState.hoverLevel;
-        portalNode.uniforms.uDiveBoost.value = portalNode.animState.diveBoost;
-      },
-    });
-
-    const diveState = {
-      camX: this.camera.position.x,
-      camY: this.camera.position.y,
-      camZ: this.camera.position.z,
-      lookX: this.cameraLookTarget.x,
-      lookY: this.cameraLookTarget.y,
-      fov: this.camera.fov,
-      distortion: 0.0,
-      flash: 0.0,
-    };
-
-    const tl = gsap.timeline();
-
-    // 1 & 2. Rapidly fly camera X/Y/Z into the portal and widen FOV for warp speed
-    tl.to(
-      diveState,
-      {
-        camX: portalPos.x * 0.92,
-        camY: portalPos.y * 0.92,
-        camZ: -29.2,
-        lookX: portalPos.x,
-        lookY: portalPos.y,
-        fov: 116,
-        duration: 1.08,
-        ease: 'power3.in',
-        onUpdate: () => {
-          this.camera.position.set(diveState.camX, diveState.camY, diveState.camZ);
-          this.cameraLookTarget.set(diveState.lookX, diveState.lookY, -30);
-          this.camera.lookAt(this.cameraLookTarget);
-          this.camera.fov = diveState.fov;
-          this.camera.updateProjectionMatrix();
-        },
-      },
-      0
-    );
-
-    // 3. Simultaneously rip the screen apart via the EffectComposer screen-tear shader
-    tl.to(
-      diveState,
-      {
-        distortion: 1.0,
-        duration: 1.04,
-        ease: 'power2.in',
-        onUpdate: () => {
-          this.tearPass.uniforms.uDistortion.value = diveState.distortion;
-        },
-      },
-      0
-    );
-
-    tl.to(
-      diveState,
-      {
-        flash: 0.95,
-        duration: 0.28,
-        ease: 'power2.in',
-        onUpdate: () => {
-          this.tearPass.uniforms.uFlash.value = diveState.flash;
-        },
-      },
-      0.8
-    );
-
-    // 4. At peak distortion, hide the gateway canvas and call window.VisionexaUniverse.enter(id)
-    tl.call(
-      () => {
-        this.isActive = false;
-        this.container.style.opacity = '0';
-        this.container.style.pointerEvents = 'none';
-        setTimeout(() => {
-          if (!this.isActive) {
-            this.container.style.display = 'none';
-          }
-        }, 320);
-
-        if (
-          window.VisionexaUniverse &&
-          typeof window.VisionexaUniverse.enter === 'function'
-        ) {
-          window.VisionexaUniverse.enter(targetId);
-        }
-
-        this.showReturnButton();
-        this.isTransitioning = false;
-      },
-      [],
-      1.08
-    );
+    this.setHoveredPortal(null);
+    this.container.style.opacity = '0';
+    this.container.style.pointerEvents = 'none';
+    this.container.style.display = 'none';
+    this.isActive = false;
+    // No cinematic travel until the next project phase. Keep all existing
+    // mascot, background, info and registration code on the original stage.
+    window.VisionexaUniverse.enter(portalNode.cfg.id);
+    this.showReturnButton();
+    this.isTransitioning = false;
   }
 
   /**
@@ -2855,138 +2842,42 @@ export class MultiverseGateway {
   returnToNexus() {
     if (this.isTransitioning || this.isActive) return;
     this.isTransitioning = true;
-
-    // 1. Hide the Return to Nexus button
     this.hideReturnButton();
-
-    // 2. Unmount/hide the panoramic city stage by restoring `body.gateway-active`
-    //    and pausing any active universe background video
     document.body.classList.add('gateway-active');
-    document.querySelectorAll('video').forEach((v) => {
-      try {
-        v.pause();
-      } catch {
-        // ignore video pause errors
-      }
+    document.querySelectorAll('video').forEach(video => {
+      try { video.pause(); } catch { /* already stopped */ }
     });
-
-    // Reset all portal scales and hover/dive uniforms to normal resting state
     this.setHoveredPortal(null);
-    this.branchHoverState.level = 0.0;
-    this.branchHoverState.target = 0.0;
-    if (this.treeUniforms) {
-      this.treeUniforms.uActiveBranchHover.value = 0.0;
+    this.branchHoverState.level = 0;
+    this.branchHoverState.target = 0;
+    this.exploreTarget.x = this.exploreTarget.y = 0;
+    this.exploreCurrent.x = this.exploreCurrent.y = 0;
+    this.cursorTarget.x = this.cursorTarget.y = 0;
+    this.cursorCurrent.x = this.cursorCurrent.y = 0;
+    this.dragVelocity.x = this.dragVelocity.y = 0;
+    this.hasExplored = false;
+    this.camera.fov = this.baseFov;
+    this.camera.position.copy(this.baseCameraPos);
+    this.camera.lookAt(this.cameraLookTarget.set(0, 0, -30));
+    this.camera.updateProjectionMatrix();
+    if (this.tearPass) {
+      this.tearPass.uniforms.uDistortion.value = 0;
+      this.tearPass.uniforms.uFlash.value = 0;
     }
-    if (this.particleUniforms) {
-      this.particleUniforms.uActiveBranchHover.value = 0.0;
-    }
-    this.portalNodes.forEach((node) => {
-      node.animState.scaleFactor = 1.0;
-      node.animState.hoverLevel = 0.0;
-      node.animState.diveBoost = 0.0;
-      const s = node.baseScale;
-      node.mesh.scale.set(s * node.aspectX, s * node.aspectY, 1);
-      node.uniforms.uHover.value = 0.0;
-      node.uniforms.uDiveBoost.value = 0.0;
+    this.portalNodes.forEach(node => {
+      node.animState.scaleFactor = 1;
+      node.animState.hoverLevel = 0;
+      node.animState.diveBoost = 0;
+      node.uniforms.uHover.value = 0;
+      node.uniforms.uDiveBoost.value = 0;
     });
-
-    // 3. Show the gateway canvas starting at the portal coordinates in a torn/warped state
-    this.isActive = true;
+    this.updatePortalPositions();
+    this.container.classList.remove('gateway-diving');
     this.container.style.display = 'block';
-    void this.container.offsetWidth;
     this.container.style.opacity = '1';
     this.container.style.pointerEvents = 'auto';
-
-    const portalNode =
-      this.portalNodes.find((n) => n.cfg.id === this.lastEnteredPortal?.id) ||
-      this.portalNodes[0];
-    const portalPos = portalNode.mesh.position.clone();
-
-    this.tearPass.uniforms.uDiveCenter.value.set(0.5, 0.5);
-    this.tearPass.uniforms.uDiveColor.value.set(portalNode.cfg.color);
-
-    const reverseState = {
-      camX: portalPos.x * 0.9,
-      camY: portalPos.y * 0.9,
-      camZ: -28.8,
-      lookX: portalPos.x,
-      lookY: portalPos.y,
-      fov: 112,
-      distortion: 0.95,
-      flash: 0.75,
-    };
-
-    this.exploreTarget.x = 0;
-    this.exploreTarget.y = 0;
-    this.exploreCurrent.x = 0;
-    this.exploreCurrent.y = 0;
-    this.cursorTarget.x = 0;
-    this.cursorTarget.y = 0;
-    this.cursorCurrent.x = 0;
-    this.cursorCurrent.y = 0;
-    this.dragVelocity.x = 0;
-    this.dragVelocity.y = 0;
-    this.hasExplored = false;
-
-    if (this.layer1Mesh) this.layer1Mesh.position.set(0, 0, -64);
-    if (this.distantCloudsMesh) this.distantCloudsMesh.position.set(0, 0, -46);
-    if (this.canopyMesh) this.canopyMesh.position.set(0, this.canopyBaseY || 0, -32.6);
-    if (this.layer3Mesh) this.layer3Mesh.position.set(0, 0, -10);
-
-    const tl = gsap.timeline();
-
-    // Zoom camera back out from the portal (z = -28.8) to starting position (z = 0)
-    // and restore normal FOV (50 deg)
-    tl.to(
-      reverseState,
-      {
-        camX: 0,
-        camY: 0,
-        camZ: 0,
-        lookX: 0,
-        lookY: 0,
-        fov: this.baseFov,
-        duration: 1.05,
-        ease: 'expo.out',
-        onUpdate: () => {
-          this.camera.position.set(
-            reverseState.camX,
-            reverseState.camY,
-            reverseState.camZ
-          );
-          this.cameraLookTarget.set(reverseState.lookX, reverseState.lookY, -30);
-          this.camera.lookAt(this.cameraLookTarget);
-          this.camera.fov = reverseState.fov;
-          this.camera.updateProjectionMatrix();
-        },
-      },
-      0
-    );
-
-    // Settle the quick screen-tear distortion & flash back to 0
-    tl.to(
-      reverseState,
-      {
-        distortion: 0.0,
-        flash: 0.0,
-        duration: 0.92,
-        ease: 'power3.out',
-        onUpdate: () => {
-          this.tearPass.uniforms.uDistortion.value = reverseState.distortion;
-          this.tearPass.uniforms.uFlash.value = reverseState.flash;
-        },
-      },
-      0
-    );
-
-    tl.call(
-      () => {
-        this.container.classList.remove('gateway-diving');
-        this.isTransitioning = false;
-      },
-      [],
-      1.05
-    );
+    this.isActive = true;
+    this.isTransitioning = false;
   }
 
   /**
@@ -3620,6 +3511,14 @@ function initMultiverseGateway() {
   portalLabel.setAttribute('role', 'status');
   portalLabel.setAttribute('aria-live', 'polite');
 
+  // An accessible list of direct universe actions for mobile visitors, avoiding
+  // excessive panning and tiny touch targets in the desktop composition.
+  const mobileDestinations = document.createElement('nav');
+  mobileDestinations.className = 'gateway-mobile-destinations';
+  mobileDestinations.setAttribute('aria-label', 'Select a universe');
+  mobileDestinations.innerHTML = UNIVERSE_PORTALS.map(p =>
+    `<button type="button" data-gateway-destination="${p.id}" style="--portal-color:${p.color}" aria-label="Enter ${p.title}">${p.title}</button>`
+  ).join('');
   const lookHud = document.createElement('div');
   lookHud.className = 'gateway-look-hud';
   lookHud.setAttribute('data-gateway-ui', 'true');
@@ -3631,6 +3530,7 @@ function initMultiverseGateway() {
   gatewayRoot.appendChild(header);
   gatewayRoot.appendChild(portalLabel);
   gatewayRoot.appendChild(lookHud);
+  gatewayRoot.appendChild(mobileDestinations);
   document.body.appendChild(gatewayRoot);
 
   // Phase 4: Dynamically create `<button id="return-to-nexus" style="position:fixed; top:20px; left:20px; z-index:9999; display:none;">RETURN TO NEXUS</button>`
@@ -3654,6 +3554,13 @@ function initMultiverseGateway() {
   });
 
   window.VisionexaGateway = gatewayInstance;
+  mobileDestinations.addEventListener('click', e => {
+    const button = e.target.closest('button[data-gateway-destination]');
+    if (!button) return;
+    e.stopPropagation();
+    const node = gatewayInstance.portalNodes.find(n => n.cfg.id === button.dataset.gatewayDestination);
+    if (node) gatewayInstance.triggerDimensionalDive(node);
+  });
 }
 
 if (document.readyState === 'loading') {

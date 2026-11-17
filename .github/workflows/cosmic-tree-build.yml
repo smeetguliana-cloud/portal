@@ -1,0 +1,30 @@
+name: Cosmic Tree Gateway Build
+on:
+  push:
+    branches:
+      - feature/cosmic-tree-gateway-energy-20261117
+  pull_request:
+    paths:
+      - 'src/gateway/**'
+      - 'multiverse404_pixel_aligned_energy_map/**'
+      - 'public/assets/cosmic-tree/**'
+      - '.github/workflows/cosmic-tree-build.yml'
+      - 'scripts/verify-gateway-assets.mjs'
+jobs:
+  gateway-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: node scripts/verify-gateway-assets.mjs
+      - run: npm run build
+      - name: Confirm build outputs
+        run: |
+          test -f dist/index.html
+          test -d dist/assets
+          test -f dist/assets/techverse-bg.webp
+          test -f dist/assets/futureverse-bg.webp
