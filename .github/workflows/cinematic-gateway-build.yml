@@ -1,0 +1,56 @@
+name: Cinematic gateway build
+
+on:
+  push:
+    branches:
+      - feat/cinematic-tree-aligned-gateway
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build production website
+        run: npm run build
+      - name: Check original mascots, backgrounds and compiled gateway art
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          for (const verse of ['techverse','gameverse','vibeverse','aiverse','cyberverse','humanverse','futureverse']) {
+            assert(fs.existsSync('dist/assets/' + verse + '-bg.webp'), 'Missing universe background: ' + verse);
+          }
+          for (const img of ['tech','game','vibe','ai','cyber','human','future']) {
+            assert(fs.existsSync('dist/assets/' + img + '.webp'), 'Missing mascot image: ' + img);
+          }
+          const emitted = fs.readdirSync('dist/assets');
+          assert(emitted.some(name => name.includes('tree_reference')), 'Approved tree was not bundled');
+          assert(emitted.some(name => name.includes('tree_emissive')), 'Registered emissive mask was not bundled');
+          for (const part of ['Futuristic_Cyan', 'Molten_Flame', 'Neon_Vibeverse', 'Arcane_Galaxy','Cybernetic_Neon','Humanverse_','Neon_Portal']) {
+            // Vite may preserve or normalize file names depending on the bundler version.
+            const normalized = value => value.toLowerCase().replace(/[^a-z0-9]/g,'');
+            assert(emitted.some(name => normalized(name).includes(normalized(part))), 'Missing selected portal art: ' + part);
+          }
+          console.log('Original universe assets and new gateway art are included in dist.');
+          NODE
+
+      - name: Install browser smoke-test tools
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Browser smoke (WebGL, desktop, mobile, navigation)
+        run: |
+          npm run dev -- --port 4173 > /tmp/gateway-vite.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 2
+          done
+          node .github/scripts/gateway-smoke.mjs
