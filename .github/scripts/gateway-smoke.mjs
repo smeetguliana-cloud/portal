@@ -53,6 +53,23 @@ try {
   assert(info.visible, 'Gateway hidden at boot');
   await capture(desktop, 'DESKTOP');
 
+  // Real pointer hover must select exactly one branch and start its energy pulse.
+  const hoverXY = await desktop.evaluate(() => {
+    const g = window.VisionexaGateway;
+    const portal = g.portalNodes.find(n => n.cfg.id === 'aiverse');
+    const p = portal.mesh.position.clone().project(g.camera);
+    return { x: (p.x * 0.5 + 0.5) * innerWidth, y: (0.5 - p.y * 0.5) * innerHeight };
+  });
+  await desktop.mouse.move(hoverXY.x, hoverXY.y);
+  await desktop.waitForFunction(() => {
+    const g = window.VisionexaGateway;
+    return g.hoveredPortal?.cfg.id === 'aiverse' &&
+      g.treeUniforms.uActiveBranchHover.value > 0.45 &&
+      g.treeUniforms.uHasActiveBranchMask.value === 1 &&
+      g.branchHoverState.pulseTime > 0.15;
+  }, null, { timeout: 12000 });
+  await capture(desktop, 'HOVER');
+
   // Use the same app callback as a genuine portal click without guessing pixel targets.
   await desktop.evaluate(() => {
     const g = window.VisionexaGateway;
