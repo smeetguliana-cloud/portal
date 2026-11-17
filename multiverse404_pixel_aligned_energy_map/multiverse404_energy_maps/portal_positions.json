@@ -1,0 +1,293 @@
+{
+  "canvas": {
+    "width": 1536,
+    "height": 1024
+  },
+  "coordinate_system": "top-left for x,y; guidance original bottom-left y",
+  "portals": {
+    "techverse": {
+      "x": 0.28,
+      "y": 0.19999999999999996,
+      "pixel_x": 430,
+      "pixel_y": 205,
+      "source_normalized_bottom_left": [
+        0.28,
+        0.8
+      ]
+    },
+    "gameverse": {
+      "x": 0.18,
+      "y": 0.4,
+      "pixel_x": 276,
+      "pixel_y": 410,
+      "source_normalized_bottom_left": [
+        0.18,
+        0.6
+      ]
+    },
+    "aiverse": {
+      "x": 0.24,
+      "y": 0.6,
+      "pixel_x": 369,
+      "pixel_y": 614,
+      "source_normalized_bottom_left": [
+        0.24,
+        0.4
+      ]
+    },
+    "humanverse": {
+      "x": 0.5,
+      "y": 0.07999999999999996,
+      "pixel_x": 768,
+      "pixel_y": 82,
+      "source_normalized_bottom_left": [
+        0.5,
+        0.92
+      ]
+    },
+    "vibeverse": {
+      "x": 0.72,
+      "y": 0.19999999999999996,
+      "pixel_x": 1106,
+      "pixel_y": 205,
+      "source_normalized_bottom_left": [
+        0.72,
+        0.8
+      ]
+    },
+    "cyberverse": {
+      "x": 0.82,
+      "y": 0.4,
+      "pixel_x": 1260,
+      "pixel_y": 410,
+      "source_normalized_bottom_left": [
+        0.82,
+        0.6
+      ]
+    },
+    "futureverse": {
+      "x": 0.76,
+      "y": 0.6,
+      "pixel_x": 1167,
+      "pixel_y": 614,
+      "source_normalized_bottom_left": [
+        0.76,
+        0.4
+      ]
+    }
+  },
+  "branch_paths_pixels": {
+    "techverse": [
+      [
+        760,
+        675
+      ],
+      [
+        697,
+        570
+      ],
+      [
+        609,
+        472
+      ],
+      [
+        500,
+        359
+      ],
+      [
+        383,
+        283
+      ],
+      [
+        300,
+        252
+      ],
+      [
+        235,
+        211
+      ]
+    ],
+    "gameverse": [
+      [
+        760,
+        675
+      ],
+      [
+        650,
+        581
+      ],
+      [
+        545,
+        500
+      ],
+      [
+        425,
+        459
+      ],
+      [
+        304,
+        454
+      ],
+      [
+        214,
+        441
+      ],
+      [
+        130,
+        428
+      ]
+    ],
+    "aiverse": [
+      [
+        760,
+        675
+      ],
+      [
+        649,
+        604
+      ],
+      [
+        527,
+        603
+      ],
+      [
+        421,
+        626
+      ],
+      [
+        309,
+        652
+      ],
+      [
+        221,
+        649
+      ],
+      [
+        145,
+        637
+      ]
+    ],
+    "humanverse": [
+      [
+        760,
+        675
+      ],
+      [
+        771,
+        540
+      ],
+      [
+        788,
+        428
+      ],
+      [
+        775,
+        304
+      ],
+      [
+        749,
+        200
+      ],
+      [
+        736,
+        118
+      ],
+      [
+        731,
+        55
+      ]
+    ],
+    "vibeverse": [
+      [
+        760,
+        675
+      ],
+      [
+        850,
+        550
+      ],
+      [
+        927,
+        416
+      ],
+      [
+        1040,
+        318
+      ],
+      [
+        1157,
+        259
+      ],
+      [
+        1253,
+        224
+      ],
+      [
+        1330,
+        198
+      ]
+    ],
+    "cyberverse": [
+      [
+        760,
+        675
+      ],
+      [
+        870,
+        572
+      ],
+      [
+        985,
+        505
+      ],
+      [
+        1110,
+        499
+      ],
+      [
+        1230,
+        490
+      ],
+      [
+        1341,
+        482
+      ],
+      [
+        1430,
+        462
+      ]
+    ],
+    "futureverse": [
+      [
+        760,
+        675
+      ],
+      [
+        858,
+        644
+      ],
+      [
+        987,
+        626
+      ],
+      [
+        1097,
+        616
+      ],
+      [
+        1202,
+        621
+      ],
+      [
+        1320,
+        611
+      ],
+      [
+        1440,
+        600
+      ]
+    ]
+  },
+  "flow_encoding": "R=(dx+1)*127.5, G=(dy+1)*127.5, B=emissive intensity. RG vector points trunk-to-tip.",
+  "notes": "Every raster exactly aligns with tree_reference.png; no crop or resize."
+}
