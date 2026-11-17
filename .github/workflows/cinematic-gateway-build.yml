@@ -41,3 +41,16 @@ jobs:
           }
           console.log('Original universe assets and new gateway art are included in dist.');
           NODE
+
+      - name: Install browser smoke-test tools
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Browser smoke (WebGL, desktop, mobile, navigation)
+        run: |
+          npm run dev -- --port 4173 > /tmp/gateway-vite.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:4173/ >/dev/null; then break; fi
+            sleep 2
+          done
+          node .github/scripts/gateway-smoke.mjs
