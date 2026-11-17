@@ -2095,7 +2095,21 @@ export class MultiverseGateway {
       this.distantCloudsMesh.scale.set(dc.width, dc.height, 1);
     }
 
-    const d2 = this.getDimensionsAtZ(-30, 1.16, GATEWAY_ART.aspect);
+    // Fit the ENTIRE approved 3:2 tree inside the initial viewport, rather than
+    // using overscan that crops the crown, roots and seven portal branches.
+    // Keep the same tree-space UV coordinates for every energy mask and portal.
+    const treeView = this.getDimensionsAtZ(-30, 1.0, GATEWAY_ART.aspect);
+    const treeFit = this.isCoarsePointer ? 1.04 : 0.88;
+    const treeHeight = Math.min(
+      treeView.frustumHeight * treeFit,
+      (treeView.frustumWidth / GATEWAY_ART.aspect) * treeFit
+    );
+    const d2 = {
+      width: treeHeight * GATEWAY_ART.aspect,
+      height: treeHeight,
+      frustumWidth: treeView.frustumWidth,
+      frustumHeight: treeView.frustumHeight,
+    };
     this.layer2Mesh.scale.set(d2.width, d2.height, 1);
     this.treeDimensions = d2;
 
@@ -2362,7 +2376,7 @@ export class MultiverseGateway {
     }
 
     const { width, height, frustumWidth, frustumHeight } = this.treeDimensions;
-    const baseSize = Math.max(3.4, Math.min(5.3, frustumWidth * 0.105));
+    const baseSize = Math.max(3.7, Math.min(5.6, Math.min(width * 0.115, height * 0.18)));
 
     this.portalNodes.forEach((node) => {
       node.baseScale = baseSize;
