@@ -405,3 +405,58 @@ body.gateway-active > #mascot-effect {
 @media (prefers-reduced-motion: reduce) {
   #multiverse-gateway .gateway-mobile-portal { transition: none; }
 }
+
+/* Floating captions are projected from the real portal meshes every frame. */
+#multiverse-gateway .gateway-portal-markers {
+  position: absolute;
+  inset: 0;
+  z-index: 24;
+  pointer-events: none;
+}
+#multiverse-gateway .gateway-portal-marker {
+  position: absolute;
+  display: block;
+  padding: 4px 7px 4px;
+  transform: translate(-50%, 0);
+  color: rgba(236, 245, 255, .88);
+  background: linear-gradient(90deg, transparent, rgba(2, 7, 20, .72), transparent);
+  border-top: 1px solid color-mix(in srgb, var(--portal-color) 48%, transparent);
+  font: 600 9px/1.25 'Orbitron', sans-serif;
+  text-shadow: 0 2px 8px rgba(0,0,0,.95);
+  letter-spacing: .12em;
+  white-space: nowrap;
+  transition: opacity .2s ease;
+}
+#multiverse-gateway .gateway-mobile-portal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 58px;
+  padding: 6px 2px;
+  background: rgba(3, 7, 21, .79);
+}
+#multiverse-gateway .gateway-mobile-portal-art {
+  display: block;
+  width: 31px;
+  height: 31px;
+  object-fit: contain;
+  filter: brightness(.82) saturate(.80) drop-shadow(0 0 5px color-mix(in srgb, var(--portal-color) 30%, transparent));
+}
+@media (max-width: 767px) {
+  #multiverse-gateway .gateway-portal-markers { display: none; }
+  #multiverse-gateway .gateway-mobile-portal {
+    min-height: 56px;
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+  #multiverse-gateway .gateway-mobile-portal-art { width: 27px; height: 27px; }
+}
+@media (max-width: 370px) {
+  #multiverse-gateway .gateway-mobile-portal {
+    font-size: 7.5px;
+    min-height: 52px;
+  }
+  #multiverse-gateway .gateway-mobile-portal-art { width: 25px; height: 25px; }
+}
