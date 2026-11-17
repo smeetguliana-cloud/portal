@@ -2635,133 +2635,36 @@ export class MultiverseGateway {
    */
   triggerDimensionalDive(portalNode) {
     if (this.isTransitioning || !portalNode) return;
+    const enter = window.VisionexaUniverse && window.VisionexaUniverse.enter;
+    if (typeof enter !== 'function') {
+      console.error('Universe navigator not ready: keeping the gateway visible.');
+      return;
+    }
+
+    // Stage 1: short dissolve, NOT an invented camera-travel effect.
     this.isTransitioning = true;
     this.lastEnteredPortal = portalNode.cfg;
-
-    const THREE = window.THREE;
-    const targetId = portalNode.cfg.id;
-    const portalPos = portalNode.mesh.position.clone();
-
-    // Project clicked portal to screen UV (0..1) for the radial screen-tear origin
-    const projected = portalPos.clone().project(this.camera);
-    this.tearPass.uniforms.uDiveCenter.value.set(
-      THREE.MathUtils.clamp(projected.x * 0.5 + 0.5, 0.1, 0.9),
-      THREE.MathUtils.clamp(projected.y * 0.5 + 0.5, 0.1, 0.9)
-    );
-    this.tearPass.uniforms.uDiveColor.value.set(portalNode.cfg.color);
-
-    // Hide the floating label and header UI during the warp dive
     if (this.labelEl) this.labelEl.classList.remove('is-visible');
     this.container.classList.add('gateway-diving');
-
-    // Expand and illuminate the clicked reality tear as the camera dives into it
-    gsap.to(portalNode.animState, {
-      scaleFactor: 2.45,
-      hoverLevel: 1.0,
-      diveBoost: 1.0,
-      duration: 1.05,
-      ease: 'expo.in',
-      overwrite: true,
-      onUpdate: () => {
-        const s = portalNode.baseScale * portalNode.animState.scaleFactor;
-        portalNode.mesh.scale.set(
-          s * portalNode.aspectX,
-          s * portalNode.aspectY,
-          1
-        );
-        portalNode.uniforms.uHover.value = portalNode.animState.hoverLevel;
-        portalNode.uniforms.uDiveBoost.value = portalNode.animState.diveBoost;
-      },
-    });
-
-    const diveState = {
-      camX: this.camera.position.x,
-      camY: this.camera.position.y,
-      camZ: this.camera.position.z,
-      lookX: this.cameraLookTarget.x,
-      lookY: this.cameraLookTarget.y,
-      fov: this.camera.fov,
-      distortion: 0.0,
-      flash: 0.0,
-    };
-
-    const tl = gsap.timeline();
-
-    // 1 & 2. Rapidly fly camera X/Y/Z into the portal and widen FOV for warp speed
-    tl.to(
-      diveState,
-      {
-        camX: portalPos.x * 0.92,
-        camY: portalPos.y * 0.92,
-        camZ: -29.2,
-        lookX: portalPos.x,
-        lookY: portalPos.y,
-        fov: 116,
-        duration: 1.08,
-        ease: 'power3.in',
-        onUpdate: () => {
-          this.camera.position.set(diveState.camX, diveState.camY, diveState.camZ);
-          this.cameraLookTarget.set(diveState.lookX, diveState.lookY, -30);
-          this.camera.lookAt(this.cameraLookTarget);
-          this.camera.fov = diveState.fov;
-          this.camera.updateProjectionMatrix();
-        },
-      },
-      0
-    );
-
-    // 3. Simultaneously rip the screen apart via the EffectComposer screen-tear shader
-    tl.to(
-      diveState,
-      {
-        distortion: 1.0,
-        duration: 1.04,
-        ease: 'power2.in',
-        onUpdate: () => {
-          this.tearPass.uniforms.uDistortion.value = diveState.distortion;
-        },
-      },
-      0
-    );
-
-    tl.to(
-      diveState,
-      {
-        flash: 0.95,
-        duration: 0.28,
-        ease: 'power2.in',
-        onUpdate: () => {
-          this.tearPass.uniforms.uFlash.value = diveState.flash;
-        },
-      },
-      0.8
-    );
-
-    // 4. At peak distortion, hide the gateway canvas and call window.VisionexaUniverse.enter(id)
-    tl.call(
-      () => {
-        this.isActive = false;
-        this.container.style.opacity = '0';
-        this.container.style.pointerEvents = 'none';
-        setTimeout(() => {
-          if (!this.isActive) {
-            this.container.style.display = 'none';
-          }
-        }, 320);
-
-        if (
-          window.VisionexaUniverse &&
-          typeof window.VisionexaUniverse.enter === 'function'
-        ) {
-          window.VisionexaUniverse.enter(targetId);
-        }
-
-        this.showReturnButton();
-        this.isTransitioning = false;
-      },
-      [],
-      1.08
-    );
+    this.container.style.opacity = '0';
+    this.container.style.pointerEvents = 'none';
+    try {
+      enter(portalNode.cfg.id); // Original universe renderer owns mascots and backgrounds
+      this.isActive = false;
+      this.showReturnButton();
+    } catch (error) {
+      console.error('Could not open universe:', error);
+      this.isActive = true;
+      this.container.style.opacity = '1';
+      this.container.style.pointerEvents = 'auto';
+      this.container.classList.remove('gateway-diving');
+      this.isTransitioning = false;
+      return;
+    }
+    window.setTimeout(() => {
+      if (!this.isActive) this.container.style.display = 'none';
+      this.isTransitioning = false;
+    }, 340);
   }
 
   /**
@@ -2831,139 +2734,51 @@ export class MultiverseGateway {
    */
   returnToNexus() {
     if (this.isTransitioning || this.isActive) return;
-    this.isTransitioning = true;
-
-    // 1. Hide the Return to Nexus button
     this.hideReturnButton();
-
-    // 2. Unmount/hide the panoramic city stage by restoring `body.gateway-active`
-    //    and pausing any active universe background video
     document.body.classList.add('gateway-active');
     document.querySelectorAll('video').forEach((v) => {
-      try {
-        v.pause();
-      } catch {
-        // ignore video pause errors
-      }
+      try { v.pause(); } catch { /* already inactive */ }
     });
 
-    // Reset all portal scales and hover/dive uniforms to normal resting state
-    this.setHoveredPortal(null);
-    this.branchHoverState.level = 0.0;
-    this.branchHoverState.target = 0.0;
+    this.hoveredPortal = null;
+    this.activeBranchNode = null;
+    this.branchHoverState.level = 0;
+    this.branchHoverState.target = 0;
+    this.branchHoverState.pulseTime = 0;
     if (this.treeUniforms) {
-      this.treeUniforms.uActiveBranchHover.value = 0.0;
+      this.treeUniforms.uActiveBranchHover.value = 0;
+      this.treeUniforms.uHasActiveBranchMask.value = 0;
+      this.treeUniforms.uGlowIntensity.value = 0.68;
     }
-    if (this.particleUniforms) {
-      this.particleUniforms.uActiveBranchHover.value = 0.0;
-    }
+    if (this.particleUniforms) this.particleUniforms.uActiveBranchHover.value = 0;
     this.portalNodes.forEach((node) => {
-      node.animState.scaleFactor = 1.0;
-      node.animState.hoverLevel = 0.0;
-      node.animState.diveBoost = 0.0;
-      const s = node.baseScale;
-      node.mesh.scale.set(s * node.aspectX, s * node.aspectY, 1);
-      node.uniforms.uHover.value = 0.0;
-      node.uniforms.uDiveBoost.value = 0.0;
+      node.animState.scaleFactor = 1;
+      node.animState.hoverLevel = 0;
+      node.animState.diveBoost = 0;
+      node.mesh.scale.set(node.baseScale * node.aspectX, node.baseScale * node.aspectY, 1);
+      node.uniforms.uHover.value = 0;
+      node.uniforms.uDiveBoost.value = 0;
     });
 
-    // 3. Show the gateway canvas starting at the portal coordinates in a torn/warped state
-    this.isActive = true;
+    this.camera.position.set(0, 0, 0);
+    this.camera.fov = this.baseFov;
+    this.camera.lookAt(0, 0, -30);
+    this.camera.updateProjectionMatrix();
+    this.exploreTarget.x = this.exploreCurrent.x = 0;
+    this.exploreTarget.y = this.exploreCurrent.y = 0;
+    this.cursorTarget.x = this.cursorCurrent.x = 0;
+    this.cursorTarget.y = this.cursorCurrent.y = 0;
+    this.dragVelocity.x = this.dragVelocity.y = 0;
+    if (this.tearPass) {
+      this.tearPass.uniforms.uDistortion.value = 0;
+      this.tearPass.uniforms.uFlash.value = 0;
+    }
     this.container.style.display = 'block';
-    void this.container.offsetWidth;
-    this.container.style.opacity = '1';
     this.container.style.pointerEvents = 'auto';
-
-    const portalNode =
-      this.portalNodes.find((n) => n.cfg.id === this.lastEnteredPortal?.id) ||
-      this.portalNodes[0];
-    const portalPos = portalNode.mesh.position.clone();
-
-    this.tearPass.uniforms.uDiveCenter.value.set(0.5, 0.5);
-    this.tearPass.uniforms.uDiveColor.value.set(portalNode.cfg.color);
-
-    const reverseState = {
-      camX: portalPos.x * 0.9,
-      camY: portalPos.y * 0.9,
-      camZ: -28.8,
-      lookX: portalPos.x,
-      lookY: portalPos.y,
-      fov: 112,
-      distortion: 0.95,
-      flash: 0.75,
-    };
-
-    this.exploreTarget.x = 0;
-    this.exploreTarget.y = 0;
-    this.exploreCurrent.x = 0;
-    this.exploreCurrent.y = 0;
-    this.cursorTarget.x = 0;
-    this.cursorTarget.y = 0;
-    this.cursorCurrent.x = 0;
-    this.cursorCurrent.y = 0;
-    this.dragVelocity.x = 0;
-    this.dragVelocity.y = 0;
-    this.hasExplored = false;
-
-    if (this.layer1Mesh) this.layer1Mesh.position.set(0, 0, -64);
-    if (this.distantCloudsMesh) this.distantCloudsMesh.position.set(0, 0, -46);
-    if (this.canopyMesh) this.canopyMesh.position.set(0, this.canopyBaseY || 0, -32.6);
-    if (this.layer3Mesh) this.layer3Mesh.position.set(0, 0, -10);
-
-    const tl = gsap.timeline();
-
-    // Zoom camera back out from the portal (z = -28.8) to starting position (z = 0)
-    // and restore normal FOV (50 deg)
-    tl.to(
-      reverseState,
-      {
-        camX: 0,
-        camY: 0,
-        camZ: 0,
-        lookX: 0,
-        lookY: 0,
-        fov: this.baseFov,
-        duration: 1.05,
-        ease: 'expo.out',
-        onUpdate: () => {
-          this.camera.position.set(
-            reverseState.camX,
-            reverseState.camY,
-            reverseState.camZ
-          );
-          this.cameraLookTarget.set(reverseState.lookX, reverseState.lookY, -30);
-          this.camera.lookAt(this.cameraLookTarget);
-          this.camera.fov = reverseState.fov;
-          this.camera.updateProjectionMatrix();
-        },
-      },
-      0
-    );
-
-    // Settle the quick screen-tear distortion & flash back to 0
-    tl.to(
-      reverseState,
-      {
-        distortion: 0.0,
-        flash: 0.0,
-        duration: 0.92,
-        ease: 'power3.out',
-        onUpdate: () => {
-          this.tearPass.uniforms.uDistortion.value = reverseState.distortion;
-          this.tearPass.uniforms.uFlash.value = reverseState.flash;
-        },
-      },
-      0
-    );
-
-    tl.call(
-      () => {
-        this.container.classList.remove('gateway-diving');
-        this.isTransitioning = false;
-      },
-      [],
-      1.05
-    );
+    this.container.classList.remove('gateway-diving');
+    this.isActive = true;
+    this.isTransitioning = false;
+    requestAnimationFrame(() => { this.container.style.opacity = '1'; });
   }
 
   /**
@@ -3604,10 +3419,32 @@ function initMultiverseGateway() {
     <div class="gateway-look-hint">DRAG OR SCROLL TO EXPLORE &nbsp;·&nbsp; MOVE CURSOR FOR DEPTH &nbsp;·&nbsp; CLICK A PORTAL</div>
   `;
 
+  // Touch-friendly access to seven portals without extensive sideways swiping.
+  const mobilePortalDock = document.createElement('nav');
+  mobilePortalDock.className = 'gateway-mobile-portals';
+  mobilePortalDock.setAttribute('aria-label', 'Choose a universe');
+  mobilePortalDock.setAttribute('data-gateway-ui', 'true');
+  UNIVERSE_PORTALS.forEach((destination) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'gateway-mobile-portal';
+    button.textContent = destination.title;
+    button.setAttribute('aria-label', 'Enter ' + destination.title);
+    button.style.setProperty('--portal-color', destination.color);
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (!gatewayInstance || !gatewayInstance.isActive) return;
+      const node = gatewayInstance.portalNodes.find((n) => n.cfg.id === destination.id);
+      if (node) gatewayInstance.triggerDimensionalDive(node);
+    });
+    mobilePortalDock.appendChild(button);
+  });
+
   gatewayRoot.appendChild(vignette);
   gatewayRoot.appendChild(header);
   gatewayRoot.appendChild(portalLabel);
   gatewayRoot.appendChild(lookHud);
+  gatewayRoot.appendChild(mobilePortalDock);
   document.body.appendChild(gatewayRoot);
 
   // Phase 4: Dynamically create `<button id="return-to-nexus" style="position:fixed; top:20px; left:20px; z-index:9999; display:none;">RETURN TO NEXUS</button>`
@@ -3624,13 +3461,22 @@ function initMultiverseGateway() {
     document.body.appendChild(returnBtn);
   }
 
-  const gatewayInstance = new MultiverseGateway({
-    container: gatewayRoot,
-    labelEl: portalLabel,
-    returnBtn,
-  });
-
-  window.VisionexaGateway = gatewayInstance;
+  let gatewayInstance = null;
+  try {
+    gatewayInstance = new MultiverseGateway({
+      container: gatewayRoot,
+      labelEl: portalLabel,
+      returnBtn,
+    });
+    window.VisionexaGateway = gatewayInstance;
+  } catch (error) {
+    console.error('Gateway could not initialize; opening original universe.', error);
+    gatewayRoot.remove();
+    document.body.classList.remove('gateway-active');
+    if (window.VisionexaUniverse && typeof window.VisionexaUniverse.enter === 'function') {
+      window.VisionexaUniverse.enter('techverse');
+    }
+  }
 }
 
 if (document.readyState === 'loading') {
