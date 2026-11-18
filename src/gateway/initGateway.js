@@ -1,46 +1,10 @@
 /**
- * ============================================================================
- * VISIONEXA '26 — MULTIVERSE 404 (REALITY NOT FOUND)
- * 2.5D Parallax World Tree, Additive-Blended Spinning Vortex Portals,
- * Screen-Tear Dimensional Dive & "Return to Nexus" Navigation Loop
- * ============================================================================
- * Strict Scope Guardrail:
- * - All edits strictly scoped to `src/gateway/initGateway.js` without modifying `index.html`.
- * - Zero geometric 3D wireframes or line networks; built as a photorealistic
- *   2.5D Parallax environment with 7 glowing additive-blended vortex portals.
- *
- * Architecture Overview:
- * - Phase 1: 2.5D Parallax & Camera Setup
- *   * Dedicated THREE.Scene and PerspectiveCamera at z = 0.
- *   * Layer 1 (Nebula Background): '/assets/layer1_bg.jpg' at z = -60
- *   * Layer 2 (The World Tree):    '/assets/layer2_tree.png' at z = -30
- *   * Layer 3 (Foreground Roots):  '/assets/layer3_fg.png' at z = -10
- *   * Responsive frustum cover-scaling and GSAP camera X/Y parallax on pointer move.
- * - Phase 2: The 7 Universe Portals (Additive Blending)
- *   * 7 THREE.PlaneGeometry portal meshes placed at branch coordinates on the
- *     Tree plane (z = -29.9).
- *   * Uses THREE.MeshBasicMaterial with '/assets/portal_vortex.jpg' (resolved with .png)
- *     as `map`, `transparent: true`, `depthWrite: false`, `blending: THREE.AdditiveBlending`,
- *     and `material.color.set()` tinted to each universe's signature brand color.
- *   * Portals continuously rotate on their Z-axis (`mesh.rotation.z`).
- *   * On Raycaster hover: GSAP scales the portal up, accelerates its spin speed,
- *     and fades in a minimal HTML UI label (e.g., "SECTOR 01 // TECHVERSE") over the portal.
- * - Phase 3: The Dimensional Dive & Handoff
- *   * Clicking a portal triggers a GSAP timeline that flies the camera Z forward
- *     past the foreground roots directly into the clicked portal's X/Y coordinates,
- *     widens the camera FOV dramatically for warp speed, and drives a custom GLSL
- *     post-processing displacement/screen-tear shader via EffectComposer before
- *     hiding the gateway canvas and calling `window.VisionexaUniverse.enter(id)`.
- * - Phase 4: "Return to Gateway" Navigation Loop
- *   * Dynamically creates `<button id="return-to-nexus">RETURN TO NEXUS</button>`
- *     (positioned at top:20px; left:20px; z-index:9999; initially hidden).
- *   * Fades the button in when `window.VisionexaUniverse.enter(id)` is called.
- *   * On click, reverses the transition: shows the gateway canvas, triggers a
- *     quick screen tear, zooms the camera back out from the portal to z = 0,
- *     hides the button, and hides the panoramic city view.
- * ============================================================================
+ * MULTIVERSE 404 — approved cinematic gateway.
+ * The single source of truth for tree, masks, cosmos and seven portal artworks
+ * is gatewayArt.js. All universe mascots, backgrounds and videos remain owned
+ * by the existing index.html / window.VisionexaUniverse renderer.
+ * This phase uses a simple portal-to-universe dissolve; travel is deferred.
  */
-
 import './gatewayUI.css';
 import { GATEWAY_ART } from './gatewayArt.js';
 
@@ -1785,11 +1749,7 @@ export class MultiverseGateway {
     this.scene.add(this.layer1Mesh);
 
     this.loadTextureWithFallback(
-      [
-        GATEWAY_ART.sky,
-        '/assets/cosmic-tree/environment/cosmic_cloud_sky_16x9.jpg',
-        '/assets/layer1_bg.png',
-      ],
+      [GATEWAY_ART.sky],
       (tex) => {
         this.layer1Uniforms.uTexture.value = tex;
         this.layer1Uniforms.uHasTexture.value = 1.0;
@@ -1874,11 +1834,7 @@ export class MultiverseGateway {
     this.scene.add(this.layer2Mesh);
 
     this.loadTextureWithFallback(
-      [
-        GATEWAY_ART.tree,
-        '/assets/cosmic-tree/tree/cosmic_tree_main_layer_clean.png',
-        '/assets/layer2_tree.png',
-      ],
+      [GATEWAY_ART.tree],
       (tex) => {
         this.treeUniforms.uBaseTexture.value = tex;
         this.treeUniforms.uHasBase.value = 1.0;
@@ -2024,7 +1980,7 @@ export class MultiverseGateway {
       positions[idx3 + 2] = pz;
       sizes[i] = 1.45 + Math.random() * 2.35;
       seeds[i] = Math.random();
-      // Primarily golden-white (~82%) with occasional restrained cyan (~18%)
+      // Subtle blue-violet particles matching the approved cosmic palette
       colorMix[i] =
         Math.random() < 0.82
           ? 0.72 + Math.random() * 0.28
@@ -2304,7 +2260,7 @@ export class MultiverseGateway {
 
     // Load shared organic energy filament & stream textures for the reality-tear rims
     this.loadTextureWithFallback(
-      ['/assets/portal_vortex.png', '/assets/portal_vortex.jpg'],
+      [GATEWAY_ART.portals.techverse],
       (rawTex) => {
         const vortexTex = this.createCircularMaskedVortexTexture(rawTex);
         this.portalNodes.forEach((node) => {

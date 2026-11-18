@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/cinematic-tree-aligned-gateway
+      - chore/clean-legacy-cosmic-gateway
   pull_request:
     branches:
       - main
